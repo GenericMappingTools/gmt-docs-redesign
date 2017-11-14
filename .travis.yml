@@ -1,0 +1,47 @@
+language: generic
+
+sudo: false
+
+branches:
+    only:
+        - master
+        # Regex to build tagged commits with version numbers
+        - /\d+\.\d+(\.\d+)?(\S*)?$/
+
+env:
+    global:
+        # Github Token for pushing the built docs (GH_TOKEN)
+        - secure: "DbT2emGe2wmSZst/nKlntg8UNrvxiCLtLpcJ4/7MlvFKoGL9qz4dRs8RMLcjX26pTb+h0IkFMUoj3SxrygHGzGH5C1wlYqbSvy1B00acTDaEbfOmfNPoGOkyN+XWmIZJ16fk15XEqOpdvQjwxU121Eff61836SIvJs+5rWdAAYzhuqDRUBXpLGameuWw05YKSVFy6qV/Wt6hu7Z0OCPpqNiaHqLgCRt3WGuhVolPdbIaV58DB04s8iUXDbo7y3vS9tW8Uw3J9Mg2KWB4pfGAVcNCmtfbMTqh7Z+xeLm0wuEVZAKfyP6h+5mJI60jZGF2RNQsniON6PzoJIglR/Me2T4HEevV6KdLaCFqZ1w1EBuzwP8BvYgS85g15U+1V3j5rfXjg3au8FnqRvRbDfKdwdnX76Gp2pw5FceWKApRZYb9KtbFDFbeXC2KQY0Oso/BJeAuPgp/Hhq/1YaHHQZ0dlMitofHg9k1+Q+aSFfWw9fpP+K5FbUNfIxpJBt51uJNlpRmqOUhoPS+IgXQmxR5YuON6TX55D2KVPc2V8qmiTZb6v/UkTkVhGZX5UK/Xh0Rv+S+KBGIaqU5EqFaXJw3vYdW6vQdYa5wPvzoIRPEQpYhRvlrlCK6Umgsm37xx54FJrW+rAp4PGd7dmpDRft2sXlPwvmf1JlHkDNOcN01GqA="
+
+os: linux
+
+env:
+    - PYTHON=3.6
+
+before_install:
+    # Get Miniconda from Continuum
+    # Need to source the script to set the PATH variable in this environment
+    # (not the scripts environment)
+    - source ci/install-miniconda.sh
+    - conda update --yes conda
+    # Install dependencies
+    - conda install --yes python=$PYTHON pip -c conda-forge
+    # Need the dev channel to get development builds of GMT 6
+    - conda install --yes --file requirements.txt -c conda-forge
+    # Show installed pkg information for postmortem diagnostic
+    - conda list
+
+script:
+    # Check code for PEP8 style and lint for code quality
+    - make
+
+deploy:
+    # Push the built docs to Github pages
+    - provider: script
+      script: ci/deploy-docs.sh
+      skip_cleanup: true
+      on:
+          branch: master
+
+notifications:
+    email: false
